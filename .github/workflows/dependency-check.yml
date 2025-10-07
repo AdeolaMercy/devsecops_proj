@@ -1,0 +1,46 @@
+name: Dependency Vulnerability Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  dependency-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run npm audit
+      run: |
+        npm audit --json > audit-report.json
+        cat audit-report.json
+      continue-on-error: true
+
+    - name: Fail if high severity found
+      run: |
+        HIGH=$(jq '.metadata.vulnerabilities.high' audit-report.json)
+        if [ "$HIGH" -gt 0 ]; then
+          echo "High severity vulnerabilities detected!"
+          exit 1
+        else
+          echo "No high severity vulnerabilities."
+        fi
+      shell: bash
+
+    - name: Upload audit report
+      uses: actions/upload-artifact@v3
+      with:
+        name: audit-report
+        path: audit-report.json
