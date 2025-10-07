@@ -40,3 +40,8 @@ jobs:
         with:
           name: semgrep-report
           path: semgrep-report.json
+
+      - name: Run Semgrep Cloud Scan
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: semgrep ci
