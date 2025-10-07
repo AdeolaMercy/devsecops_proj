@@ -1,6 +1,11 @@
 name: "Let me lint:fix that for you"
 
-on: [push]
+#on: [push]
+on:
+  push:
+  branches-ignore:
+      - master
+      - feature/semgrep-pipeline
 
 jobs:
   LMLFTFY:

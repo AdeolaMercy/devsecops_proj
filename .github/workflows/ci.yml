@@ -4,6 +4,8 @@ on:
     branches-ignore:
       - l10n_develop
       - gh-pages
+      - master
+      - feature/semgrep-pipeline
     paths-ignore:
       - '*.md'
       - 'LICENSE'
