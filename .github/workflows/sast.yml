@@ -2,9 +2,11 @@ name: Semgrep SAST Scan
 
 on:
   push:
-    branches: [ "main" ]
+    #branches: [ "main" ]
+    branches: [ "semgrep-pipeline" ]
   pull_request:
-    branches: [ "main" ]
+    #branches: [ "main" ]
+    branches: [ "semgrep-pipeline" ]
   workflow_dispatch:
 
 jobs:
