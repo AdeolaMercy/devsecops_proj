@@ -17,29 +17,27 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'
+        node-version: '22.20'
 
     - name: Install dependencies
       run: npm install
-      working-directory: juice-shop
 
     - name: Run npm audit
       run: |
         npm audit --json > audit-report.json
         cat audit-report.json
-      working-directory: juice-shop
       continue-on-error: true
 
     - name: Upload audit report
       uses: actions/upload-artifact@v4
       with:
         name: audit-report
-        path: juice-shop/audit-report.json
+        path: audit-report.json
 
     - name: Print vulnerability summary
       run: |
         echo "================== Vulnerability Summary =================="
-        if [ -s juice-shop/audit-report.json ]; then
+        if [ -s audit-report.json ]; then
           jq -r '
             [
               .vulnerabilities[]? | 
@@ -48,7 +46,7 @@ jobs:
             | sort_by(.severity) 
             | .[] 
             | "Package: \(.package)\nSeverity: \(.severity)\nIssue: \(.title)\nURL: \(.url)\n-------------------------"
-          ' juice-shop/audit-report.json
+          ' audit-report.json
         else
           echo "No vulnerabilities found."
         fi
@@ -67,7 +65,7 @@ jobs:
 
     - name: Fail if high severity found
       run: |
-        HIGH=$(jq '.metadata.vulnerabilities.high' juice-shop/audit-report.json)
+        HIGH=$(jq '.metadata.vulnerabilities.high' audit-report.json)
         if [ "$HIGH" -gt 0 ]; then
           echo "High severity vulnerabilities detected!"
           exit 1
@@ -75,5 +73,3 @@ jobs:
           echo "No high severity vulnerabilities."
         fi
       shell: bash
-
-
