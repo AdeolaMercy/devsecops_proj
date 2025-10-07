@@ -33,7 +33,25 @@ jobs:
       with:
         name: audit-report
         path: audit-report.json
-        
+
+    - name: Print vulnerability summary
+      run: |
+        echo "================== Vulnerability Summary =================="
+        if [ -s audit-report.json ]; then
+          jq -r '
+            [
+              .advisories[]? | 
+              {package: .module_name, severity: .severity, title: .title, url: .url}
+            ] 
+            | sort_by(.severity) 
+            | .[] 
+            | "Package: \(.package)\nSeverity: \(.severity)\nIssue: \(.title)\nURL: \(.url)\n-------------------------"
+          ' audit-report.json
+        else
+          echo "No vulnerabilities found."
+        fi
+      shell: bash
+  
     - name: Fail if high severity found
       run: |
         HIGH=$(jq '.metadata.vulnerabilities.high' audit-report.json)
