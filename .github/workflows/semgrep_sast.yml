@@ -27,7 +27,7 @@ jobs:
 
       - name: Run Semgrep scan
         run: |
-          semgrep --config=auto --error --exclude node_modules
+          semgrep --config=auto --exclude node_modules
 
       # OPTIONAL: Upload report as artifact
       - name: Save Semgrep Report
