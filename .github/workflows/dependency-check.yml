@@ -50,8 +50,19 @@ jobs:
         else
           echo "No vulnerabilities found."
         fi
-      shell: bash
-  
+        echo "summary<<EOF" >> $GITHUB_ENV
+        echo "$SUMMARY" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Comment on Pull Request
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          ## 🛡 Dependency Vulnerability Report
+          ${{ env.summary }}
+
     - name: Fail if high severity found
       run: |
         HIGH=$(jq '.metadata.vulnerabilities.high' audit-report.json)
