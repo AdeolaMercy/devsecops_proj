@@ -40,8 +40,8 @@ jobs:
         if [ -s audit-report.json ]; then
           jq -r '
             [
-              .advisories[]? | 
-              {package: .module_name, severity: .severity, title: .title, url: .url}
+              .vulnerabilities[]? | 
+              {package: .name, severity: .severity, title: .title, url: .url}
             ] 
             | sort_by(.severity) 
             | .[] 
