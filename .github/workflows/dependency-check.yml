@@ -73,7 +73,7 @@ jobs:
           if [ "$COUNT" -gt 0 ]; then
             BLOCK=$(cat <<EOF
         <details>
-         <summary>$TOOL - $SEVERITY ($COUNT)</summary>
+        <summary>$TOOL - $SEVERITY ($COUNT)</summary>
          
          $(jq -r --arg sev "$SEVERITY" '
            .vulnerabilities[]? 
@@ -83,19 +83,19 @@ jobs:
 
         </details>
         EOF
-            )
-            echo "$BLOCK"
-          fi
+              )
+              echo "$BLOCK"
+            fi
         }
 
         # Create sections for npm audit
-        SUMMARY+="## npm Audit Report"
+        SUMMARY+="# npm Audit Report"
         for sev in critical high moderate low; do
           SUMMARY+=$(make_section juice_shop/npmaudit-report.json "npm audit" "$sev")
         done
 
         # Create sections for Snyk
-        SUMMARY+="## Snyk Scan Report"
+        SUMMARY+="# Snyk Scan Report"
         for sev in critical high moderate low; do
           SUMMARY+=$(make_section juice_shop/snyk-report.json "Snyk" "$sev")
         done
@@ -105,11 +105,7 @@ jobs:
           SUMMARY="✅ No vulnerabilities found!"
         fi
 
-        # Escape for GitHub Actions
-        echo "summary<<EOF" >> $GITHUB_OUTPUT
-        echo "$SUMMARY" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-
+        echo "$SUMMARY" 
 
     - name: Comment on Pull Request
       uses: peter-evans/create-or-update-comment@v4
