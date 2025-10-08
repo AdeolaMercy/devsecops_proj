@@ -71,18 +71,19 @@ jobs:
 
           COUNT=$(jq "[.vulnerabilities[]? | select(.severity==\"$SEVERITY\")] | length" "$FILE")
           if [ "$COUNT" -gt 0 ]; then
-            BLOCK="<details>
+            BLOCK=$(cat <<EOF
+        <details>
          <summary>$TOOL - $SEVERITY ($COUNT)</summary>
          
-            BLOCK+=$(jq -r --arg sev "$SEVERITY" '
-              .vulnerabilities[]? 
-              | select(.severity == $sev) 
-              | "- **\(.name // .packageName)** (\(.severity)) – [\(.title // "N/A")](\(.url // ""))"
-            ' "$FILE")
-            BLOCK+="
+         $(jq -r --arg sev "$SEVERITY" '
+           .vulnerabilities[]? 
+           | select(.severity == $sev) 
+           | "- **\(.name // .packageName)** (\(.severity)) – [\(.title // "N/A")](\(.url // ""))"
+         ' "$FILE")
 
         </details>
-        "
+        EOF
+            )
             echo "$BLOCK"
           fi
         }
