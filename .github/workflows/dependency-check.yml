@@ -95,7 +95,7 @@ jobs:
         done
 
         # Create sections for Snyk
-        SUMMARY+="**Snyk Scan Report**"
+        SUMMARY+="Snyk Scan Report"
         for sev in critical high moderate low; do
           SUMMARY+=$(make_section juice_shop/snyk-report.json "Snyk" "$sev")
         done
