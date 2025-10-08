@@ -56,48 +56,55 @@ jobs:
         name: audit-report
         path: juice_shop/audit-report.json
 
-    - name: Print vulnerability summary
+    - name: Generate collapsible vulnerability summary
       id: summary
       run: |
         echo "================== Vulnerability Summary =================="
+
         SUMMARY=""
 
-        if [ -s juice_shop/npmaudit-report.json ]; then
-         NPM_SUMMARY=$(jq -r '
-            [
-              .vulnerabilities[]? | 
-              {package: .name, severity: .severity, title: .title, url: .url}
-            ] 
-            | sort_by(.severity) 
-            | .[] 
-            | "Package: \(.package)\nSeverity: \(.severity)\nIssue: \(.title)\nURL: \(.url)\n-------------------------"
-          ' juice_shop/audit-report.json)
-          SUMMARY="$SUMMARY\n\n### npm audit\n$NPM_SUMMARY"
-        else
-          echo "No vulnerabilities found."
+        # Helper function to create collapsible section per severity
+        make_section() {
+          local FILE="$1"
+          local TOOL="$2"
+          local SEVERITY="$3"
+
+          COUNT=$(jq "[.vulnerabilities[]? | select(.severity==\"$SEVERITY\")] | length" "$FILE")
+          if [ "$COUNT" -gt 0 ]; then
+            echo "<details>"
+            echo "<summary>$(echo $TOOL) - $SEVERITY ($COUNT)</summary>"
+            echo ""
+            jq -r --arg tool "$TOOL" --arg sev "$SEVERITY" '
+              .vulnerabilities[]? 
+              | select(.severity == $sev) 
+              | "- **\(.name // .packageName)** (\(.severity)) – [\(.title // "N/A")](\(.url // ""))"
+            ' "$FILE"
+            echo ""
+            echo "</details>"
+          fi
+        }
+
+        # Create sections for npm audit
+        SUMMARY+="### 📦 npm audit\n"
+        for sev in critical high moderate low; do
+          SUMMARY+=$(make_section juice_shop/npm-audit.json "npm audit" "$sev")
+        done
+
+        # Create sections for Snyk
+        SUMMARY+="\n### 🛡️ Snyk Scan\n"
+        for sev in critical high moderate low; do
+          SUMMARY+=$(make_section juice_shop/snyk-report.json "Snyk" "$sev")
+        done
+
+        # Fallback if empty
+        if [ -z "$SUMMARY" ]; then
+          SUMMARY="✅ No vulnerabilities found!"
         fi
 
-        #snyk summary
-        if [ -s juice-shop/snyk-report.json ]; then
-          SNYK_SUMMARY=$(jq -r '
-            if (.vulnerabilities | length) == 0 then
-              "✅ No vulnerabilities found by Snyk."
-            else
-              .vulnerabilities[]
-              | "🔹 Package: \(.packageName)\nSeverity: \(.severity)\nTitle: \(.title)\nURL: \(.url)\n-------------------------"
-            end
-          ' juice-shop/snyk-report.json)
-          SUMMARY="$SUMMARY\n\n### Snyk Scan\n$SNYK_SUMMARY"
-        else
-          SUMMARY="$SUMMARY\n\n Snyk report missing or empty."
-        fi
-
-        echo -e "$SUMMARY"
-        printf "%s\n" "$SUMMARY"
+        # Escape for GitHub Actions
         SUMMARY="${SUMMARY//'%'/'%25'}"
         SUMMARY="${SUMMARY//$'\n'/'%0A'}"
         SUMMARY="${SUMMARY//$'\r'/'%0D'}"
-        
         echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
 
     - name: Comment on Pull Request
