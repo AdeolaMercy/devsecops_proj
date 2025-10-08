@@ -21,16 +21,53 @@ jobs:
 
     - name: Install dependencies
       run: npm install
+      working-directory: juice-shop
 
     - name: Run npm audit
       run: |
         npm audit --json > audit-report.json
         cat audit-report.json
+      working-directory: juice-shop
       continue-on-error: true
+
+    - name: Upload audit report
+      uses: actions/upload-artifact@v4
+      with:
+        name: audit-report
+        path: juice-shop/audit-report.json
+
+    - name: Print vulnerability summary
+      run: |
+        echo "================== Vulnerability Summary =================="
+        if [ -s juice-shop/audit-report.json ]; then
+          jq -r '
+            [
+              .vulnerabilities[]? | 
+              {package: .name, severity: .severity, title: .title, url: .url}
+            ] 
+            | sort_by(.severity) 
+            | .[] 
+            | "Package: \(.package)\nSeverity: \(.severity)\nIssue: \(.title)\nURL: \(.url)\n-------------------------"
+          ' juice-shop/audit-report.json
+        else
+          echo "No vulnerabilities found."
+        fi
+        echo "summary<<EOF" >> $GITHUB_ENV
+        echo "$SUMMARY" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Comment on Pull Request
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          ## 🛡 Dependency Vulnerability Report
+          ${{ env.summary }}
 
     - name: Fail if high severity found
       run: |
-        HIGH=$(jq '.metadata.vulnerabilities.high' audit-report.json)
+        HIGH=$(jq '.metadata.vulnerabilities.high' juice-shop/audit-report.json)
         if [ "$HIGH" -gt 0 ]; then
           echo "High severity vulnerabilities detected!"
           exit 1
@@ -39,8 +76,4 @@ jobs:
         fi
       shell: bash
 
-    - name: Upload audit report
-      uses: actions/upload-artifact@v4
-      with:
-        name: audit-report
-        path: audit-report.json
+
