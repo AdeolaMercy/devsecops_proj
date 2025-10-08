@@ -52,6 +52,7 @@ jobs:
         else
           echo "No vulnerabilities found."
         fi
+        
         echo "summary<<EOF" >> $GITHUB_ENV
         echo "$SUMMARY" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
