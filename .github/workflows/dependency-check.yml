@@ -71,10 +71,10 @@ jobs:
 
           COUNT=$(jq "[.vulnerabilities[]? | select(.severity==\"$SEVERITY\")] | length" "$FILE")
           if [ "$COUNT" -gt 0 ]; then
-            BLOCK="<details>"
-<summary>$TOOL - $SEVERITY ($COUNT)</summary>
+            BLOCK="<details>
+         <summary>$TOOL - $SEVERITY ($COUNT)</summary>
 
-"
+         "
             BLOCK+=$(jq -r --arg sev "$SEVERITY" '
               .vulnerabilities[]? 
               | select(.severity == $sev) 
@@ -82,12 +82,12 @@ jobs:
             ' "$FILE")
             BLOCK+="
 
-</details>
+        </details>
 
-"
-        echo "$BLOCK"
-      fi
-    }
+        "
+            echo "$BLOCK"
+          fi
+        }
 
         # Create sections for npm audit
         SUMMARY+="## npm Audit Report"
