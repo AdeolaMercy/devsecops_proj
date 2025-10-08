@@ -1,6 +1,6 @@
 # DevsecOps Security Gate Guideline on GitHub
 
-# Step-by-step guide to enable required status checks
+ **Step-by-step guide to enable required status checks**
 
 -  Go to repository settings  
 - Open your GitHub repository.  
