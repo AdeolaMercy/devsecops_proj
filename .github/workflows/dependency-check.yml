@@ -37,10 +37,11 @@ jobs:
         path: juice_shop/audit-report.json
 
     - name: Print vulnerability summary
+      id: summary
       run: |
         echo "================== Vulnerability Summary =================="
         if [ -s juice_shop/audit-report.json ]; then
-          jq -r '
+          SUMMARY=$(jq -r '
             [
               .vulnerabilities[]? | 
               {package: .name, severity: .severity, title: .title, url: .url}
@@ -48,14 +49,16 @@ jobs:
             | sort_by(.severity) 
             | .[] 
             | "Package: \(.package)\nSeverity: \(.severity)\nIssue: \(.title)\nURL: \(.url)\n-------------------------"
-          ' juice_shop/audit-report.json
+          ' juice_shop/audit-report.json)
         else
           echo "No vulnerabilities found."
         fi
-        
-        echo "summary<<EOF" >> $GITHUB_ENV
-        echo "$SUMMARY" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+
+        printf "%s\n" "$SUMMARY"
+        SUMMARY="${SUMMARY//'%'/'%25'}"
+        SUMMARY="${SUMMARY//$'\n'/'%0A'}"
+        SUMMARY="${SUMMARY//$'\r'/'%0D'}"
+        echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
 
     - name: Comment on Pull Request
       uses: peter-evans/create-or-update-comment@v4
@@ -64,7 +67,8 @@ jobs:
         issue-number: ${{ github.event.pull_request.number }}
         body: |
           ## 🛡 Dependency Vulnerability Report
-          ${{ env.summary }}
+          
+          ${{ steps.summary.outputs.summary }}
 
     - name: Fail if high severity found
       run: |
