@@ -76,4 +76,38 @@ jobs:
         fi
       shell: bash
 
+    - name: Notify Slack on failure
+      if: failure()  # Only runs when the previous job fails
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        PAYLOAD=$(jq -n --arg repo "${{ github.repository }}" \
+                         --arg url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                         --arg branch "${{ github.ref_name }}" \
+                         --arg summary "${{ env.summary }}" \
+        '{
+          "attachments": [
+            {
+              "color": "#ff0000",
+              "title": "⚠️ Dependency Check Failed",
+              "fields": [
+                {"title": "Repository", "value": $repo, "short": true},
+                {"title": "Branch", "value": $branch, "short": true},
+                {"title": "Details", "value": $summary, "short": false}
+              ],
+              "actions": [
+                {
+                  "type": "button",
+                  "text": "View Workflow Run",
+                  "url": $url
+                }
+              ]
+            }
+          ]
+        }')
+
+        curl -X POST -H 'Content-type: application/json' \
+          --data "$PAYLOAD" \
+          "$SLACK_WEBHOOK_URL"
+
 
