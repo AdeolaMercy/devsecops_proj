@@ -98,7 +98,7 @@ Example PR Comment Output:
 | express | critical | Remote Code Execution |
 
 Example of Slack Notification:
-![Project Workflow](docs/slack_notification.png)
+![Project Workflow](../docs/slack_notification.png)
 
 
 # **7\. Verification Steps**
