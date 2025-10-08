@@ -82,7 +82,6 @@ jobs:
             BLOCK+="
 
         </details>
-
         "
             echo "$BLOCK"
           fi
