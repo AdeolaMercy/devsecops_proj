@@ -89,13 +89,13 @@ jobs:
         }
 
         # Create sections for npm audit
-        SUMMARY+="# npm Audit Report"
+        SUMMARY+="npm Audit Report"
         for sev in critical high moderate low; do
           SUMMARY+=$(make_section juice_shop/npmaudit-report.json "npm audit" "$sev")
         done
 
         # Create sections for Snyk
-        SUMMARY+="# Snyk Scan Report"
+        SUMMARY+="Snyk Scan Report"
         for sev in critical high moderate low; do
           SUMMARY+=$(make_section juice_shop/snyk-report.json "Snyk" "$sev")
         done
