@@ -24,20 +24,23 @@ jobs:
       - name: Install Semgrep
         run: |
           pip install semgrep
+        working-directory: juice_shop
 
       - name: Run Semgrep scan
         run: |
           semgrep --config=auto --exclude node_modules
+        working-directory: juice_shop
 
       # OPTIONAL: Upload report as artifact
       - name: Save Semgrep Report
         run: semgrep --config=auto --json --exclude node_modules > semgrep-report.json
+        working-directory: juice_shop
 
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
           name: semgrep-report
-          path: semgrep-report.json
+          path: juice_shop/semgrep-report.json
 
       - name: Run Semgrep Cloud Scan
         env:
