@@ -105,7 +105,10 @@ jobs:
           SUMMARY="✅ No vulnerabilities found!"
         fi
 
-        echo "$SUMMARY" 
+        # Escape for GitHub Actions
+        echo "summary<<EOF" >> $GITHUB_OUTPUT
+        echo "$SUMMARY" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Comment on Pull Request
       uses: peter-evans/create-or-update-comment@v4
