@@ -26,7 +26,7 @@ jobs:
     - name: Run npm audits
       run: |
         npm audit --json > audit-report.json
-        cat audit-report.json
+        cat juice_shop/audit-report.json
       working-directory: juice_shop
       continue-on-error: true
 
