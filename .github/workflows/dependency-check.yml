@@ -21,20 +21,20 @@ jobs:
 
     - name: Install dependencies
       run: npm install
-      working-directory: juice-shop
+      working-directory: juice_shop
 
     - name: Run npm audit
       run: |
         npm audit --json > audit-report.json
         cat audit-report.json
-      working-directory: juice-shop
+      working-directory: juice_shop
       continue-on-error: true
 
     - name: Upload audit report
       uses: actions/upload-artifact@v4
       with:
         name: audit-report
-        path: juice-shop/audit-report.json
+        path: juice_shop/audit-report.json
 
     - name: Print vulnerability summary
       run: |
