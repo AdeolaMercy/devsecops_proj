@@ -54,7 +54,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: audit-report
-        path: juice_shop/audit-report.json
+        path: juice_shop/npmaudit-report.json
 
     - name: Generate collapsible vulnerability summary
       id: summary
@@ -87,7 +87,7 @@ jobs:
         # Create sections for npm audit
         SUMMARY+="### 📦 npm audit\n"
         for sev in critical high moderate low; do
-          SUMMARY+=$(make_section juice_shop/npm-audit.json "npm audit" "$sev")
+          SUMMARY+=$(make_section juice_shop/npmaudit-report.json "npm audit" "$sev")
         done
 
         # Create sections for Snyk
@@ -105,7 +105,10 @@ jobs:
         SUMMARY="${SUMMARY//'%'/'%25'}"
         SUMMARY="${SUMMARY//$'\n'/'%0A'}"
         SUMMARY="${SUMMARY//$'\r'/'%0D'}"
-        echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+        echo "summary<<EOF" >> $GITHUB_OUTPUT
+        echo "$SUMMARY" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
 
     - name: Comment on Pull Request
       uses: peter-evans/create-or-update-comment@v4
@@ -121,7 +124,7 @@ jobs:
       working-directory: juice_shop
       shell: bash
       run: |
-        NPM_HIGH=$(jq '[.vulnerabilities[]? | select(.severity=="high" or .severity=="critical")] | length' npm-audit.json)
+        NPM_HIGH=$(jq '[.vulnerabilities[]? | select(.severity=="high" or .severity=="critical")] | length' npmaudit-report.json)
         echo "npm audit - High/Critical count: $NPM_HIGH"
 
         # Check Snyk
@@ -147,7 +150,7 @@ jobs:
           "attachments": [
             {
               "color": "#ff0000",
-              "title": "⚠️ Dependency Check Failed",
+              "title": "⚠️ Dependency Check Failed with snyk and npm audit",
               "fields": [
                 {"title": "Repository", "value": $repo, "short": true},
                 {"title": "Branch", "value": $branch, "short": true},
