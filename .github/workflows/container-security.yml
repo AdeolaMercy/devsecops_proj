@@ -51,3 +51,13 @@ jobs:
           else
             echo "✅ No HIGH/CRITICAL vulnerabilities found."
           fi
+  #Detect base image automatically and initiate a scan on the container image
+      - name: Detect base image
+        id: base
+        run: |
+          BASE_IMAGE=$(grep '^FROM' Dockerfile | head -1 | awk '{print $2}')
+          echo "Base image detected: $BASE_IMAGE"
+          echo "base_image=$BASE_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Scan base image with Trivy
+        run: trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ steps.base.outputs.base_image }}
