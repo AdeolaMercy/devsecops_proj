@@ -102,9 +102,6 @@ jobs:
         fi
 
         # Escape for GitHub Actions
-        SUMMARY="${SUMMARY//'%'/'%25'}"
-        SUMMARY="${SUMMARY//$'\n'/'%0A'}"
-        SUMMARY="${SUMMARY//$'\r'/'%0D'}"
         echo "summary<<EOF" >> $GITHUB_OUTPUT
         echo "$SUMMARY" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
@@ -116,7 +113,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         issue-number: ${{ github.event.pull_request.number }}
         body: |
-          ## 🛡 Dependency Vulnerability Report
+          ## Dependency Vulnerability Report
           
           ${{ steps.summary.outputs.summary }}
 
