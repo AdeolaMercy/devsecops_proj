@@ -27,6 +27,7 @@ jobs:
           image-ref: 'juice-shop:latest'
           format: 'table'
          # exit-code: '1'            # Fail build if critical/high found
+         # exit-code: '1'            # Fail build if critical/high found
           vuln-type: 'os,library'   # Scan OS and app dependencies
           severity: 'HIGH,CRITICAL'
 
@@ -40,7 +41,7 @@ jobs:
         with:
           name: trivy-scan-report
           path: juice_shop/trivy-report.json
-
+          
       - name: Fail build on HIGH/CRITICAL vulnerabilities
         run: |
           HIGH_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH" or .Severity=="CRITICAL")] | length' juice_shop/trivy-report.json)
@@ -50,5 +51,3 @@ jobs:
           else
             echo "✅ No HIGH/CRITICAL vulnerabilities found."
           fi
-
-    
