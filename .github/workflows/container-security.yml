@@ -1,0 +1,52 @@
+name: trivy scan
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  container-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --- Build the Juice Shop container ---
+      - name: Build Juice Shop Docker image
+        run: |
+          cd juice_shop
+          docker build -t juice-shop:latest .
+
+      # --- Scan the container image with Trivy ---
+      - name: Scan Juice Shop container with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'juice-shop:latest'
+          format: 'table'
+         # exit-code: '1'            # Fail build if critical/high found
+          vuln-type: 'os,library'   # Scan OS and app dependencies
+          severity: 'HIGH,CRITICAL'
+
+      # --- Optional: Upload Trivy report as an artifact ---
+      - name: Generate Trivy JSON report
+        run: |
+          trivy image --format json -o juice_shop/trivy-report.json juice-shop:latest
+
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-report
+          path: juice_shop/trivy-report.json
+          
+      - name: Fail build on HIGH/CRITICAL vulnerabilities
+        run: |
+          HIGH_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH" or .Severity=="CRITICAL")] | length' juice_shop/trivy-report.json)
+          if [ "$HIGH_COUNT" -gt 0 ]; then
+            echo "❌ Found $HIGH_COUNT HIGH/CRITICAL vulnerabilities. Failing the build."
+            exit 1
+          else
+            echo "✅ No HIGH/CRITICAL vulnerabilities found."
+          fi
