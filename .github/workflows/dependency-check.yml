@@ -39,7 +39,7 @@ jobs:
     - name: Print vulnerability summary
       run: |
         echo "================== Vulnerability Summary =================="
-        if [ -s juice-shop/audit-report.json ]; then
+        if [ -s juice_shop/audit-report.json ]; then
           jq -r '
             [
               .vulnerabilities[]? | 
@@ -48,7 +48,7 @@ jobs:
             | sort_by(.severity) 
             | .[] 
             | "Package: \(.package)\nSeverity: \(.severity)\nIssue: \(.title)\nURL: \(.url)\n-------------------------"
-          ' juice-shop/audit-report.json
+          ' juice_shop/audit-report.json
         else
           echo "No vulnerabilities found."
         fi
@@ -67,7 +67,7 @@ jobs:
 
     - name: Fail if high severity found
       run: |
-        HIGH=$(jq '.metadata.vulnerabilities.high' juice-shop/audit-report.json)
+        HIGH=$(jq '.metadata.vulnerabilities.high' juice_shop/audit-report.json)
         if [ "$HIGH" -gt 0 ]; then
           echo "High severity vulnerabilities detected!"
           exit 1
