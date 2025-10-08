@@ -73,8 +73,7 @@ jobs:
           if [ "$COUNT" -gt 0 ]; then
             BLOCK="<details>
          <summary>$TOOL - $SEVERITY ($COUNT)</summary>
-
-         "
+         
             BLOCK+=$(jq -r --arg sev "$SEVERITY" '
               .vulnerabilities[]? 
               | select(.severity == $sev) 
