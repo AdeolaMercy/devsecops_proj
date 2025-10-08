@@ -4,24 +4,24 @@
 
 -  Go to repository settings  
 - Open your GitHub repository.  
-- Click on Settings → Branches (in the left sidebar).  
+- **Click on Settings → Branches** (in the left sidebar).  
   * Add a branch protection rule  
   * Under Branch protection rules, click Add rule.  
   * In Branch name pattern, type:  
   * main  
-- Enable required status checks  
+- **Enable required status checks** 
   * Check ✅ Require status checks to pass before merging.  
   * A list of workflows/jobs appears which should correspond to your GitHub Actions runs.  
   * Select the specific job(s) you want to enforce, e.g. dependency-scan, semgrep-scan  
   * (If you’re unsure, you can first run your workflow once which will appear in the list.)  
-- Optional: enforce review policies  
+- **Optional: enforce review policies**  
 - You can also enable:  
   * Require pull request reviews before merging  
   * Include administrators (to apply to admins too)  
   * Restrict who can push to main  
   * These make your main branch even more secure.  
-- Save changes  
-- Click Create / Save changes at the bottom.
+- **Save changes**  
+- **Click Create / Save changes at the bottom**.
 
 Enforcing these security checks ensure whenever someone opens a PR into main:
 
