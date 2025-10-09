@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir -p zap-reports
           chmod 777 zap-reports
-          docker run --rm --network zapnet -v $PWD/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+          docker run --rm --network zapnet -v ${{ github.workspace }}/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://juice:3000 -r /zap/wrk/baseline.html -J /zap/wrk/baseline.json
 
       - name: Upload baseline report
@@ -49,7 +49,7 @@ jobs:
         run: |
           mkdir -p zap-reports
           chmod 777 zap-reports
-          docker run --rm --network zapnet -v $PWD/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+          docker run --rm --network zapnet -v ${{ github.workspace }}/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-full-scan.py -t http://juice:3000 -r /zap/wrk/fullscan.html -J /zap/wrk/fullscan.json || true
           # note: allow non-zero so we can parse results and upload artifacts
 
