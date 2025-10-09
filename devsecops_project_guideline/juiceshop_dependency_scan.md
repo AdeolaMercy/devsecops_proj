@@ -6,7 +6,7 @@ Automate the detection and reporting of dependency vulnerabilities in the OWASP 
 
 # **2\. Project Setup**
 
-## **2.1 — Fork OWASP Juice Shop**
+## **2.1 Fork OWASP Juice Shop**
 
 1\. Go to https://github.com/juice-shop/juice-shop.  
 2\. Click 'Fork' and select your GitHub account.  
@@ -14,7 +14,7 @@ Automate the detection and reporting of dependency vulnerabilities in the OWASP 
    git clone https://github.com/\<your-username\>/\<your-repo\>.git  
    cd \<your-repo\>
 
-## **2.2 — Move Juice Shop into a subdirectory**
+## **2.2 Move Juice Shop into a subdirectory**
 
 mkdir juice\_shop  
 mv \* juice\_shop/ 2\>/dev/null || true
@@ -34,7 +34,7 @@ On vs code, create the workflow folder using: mkdir \-p .github/workflows. Then 
 
 # **4\. Configure Secrets**
 
-## **4.1 — Snyk secret**
+## **4.1 Snyk secret**
 
 In order to scan the application’s dependencies with snyk, it needs to authenticate and therefore a token needs to be configured.  Without a secret, the workflow would fail.
 
@@ -47,7 +47,7 @@ To obtain a snyk token, do the following:
 Go to GitHub → Repo → Settings → Secrets and variables → Actions → New repository secret.  
 Add the SNYK\_TOKEN
 
-## **4.2 — Slack webhook url**
+## **4.2 Slack webhook url**
 
 To send vulnerability notification to slack channel, do the following:
 
@@ -87,15 +87,7 @@ You can find an example dependency yaml file here \- [https://github.com/AdeolaM
 
 Example PR Comment Output:
 
-\#\#\# npm audit Results  
-| Package | Severity | Title |  
-|----------|-----------|-------|  
-| lodash | high | Prototype Pollution |
-
-\#\#\# Snyk Results  
-| Package | Severity | Title |  
-|----------|-----------|-------|  
-| express | critical | Remote Code Execution |
+![Project Workflow](../docs/prcomment.png)
 
 Example of Slack Notification:
 ![Project Workflow](../docs/slack_notification.png)
