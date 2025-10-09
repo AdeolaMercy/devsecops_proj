@@ -35,6 +35,7 @@ jobs:
       - name: Run ZAP baseline scan (fast check)
         run: |
           mkdir -p zap-reports
+          chmod 777 zap-reports
           docker run --rm --network zapnet -v $PWD/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json
 
@@ -47,6 +48,7 @@ jobs:
       - name: Run ZAP full active scan (optional, longer)
         run: |
           mkdir -p zap-reports
+          chmod 777 zap-reports
           docker run --rm --network zapnet -v $PWD/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-full-scan.py -t http://juice:3000 -r fullscan.html -J fullscan.json || true
           # note: allow non-zero so we can parse results and upload artifacts
