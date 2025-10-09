@@ -50,7 +50,7 @@ jobs:
           mkdir -p zap-reports
           chmod 777 zap-reports
           docker run --rm --network zapnet -v ${{ github.workspace }}/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
-            zap-full-scan.py -t http://juice:3000 -r /zap/wrk/fullscan.html -J /zap/wrk/fullscan.json || true
+            zap-full-scan.py -t http://juice:3000 -r fullscan.html -J fullscan.json || true
           # note: allow non-zero so we can parse results and upload artifacts
 
       - name: Upload fullscan report
