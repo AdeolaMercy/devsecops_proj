@@ -95,12 +95,12 @@ Example of Slack Notification:
 
 # **7\. Verification Steps**
 
-1. Create a new branch: git checkout \-b feature/dependency-pipeline 
+1\. Create a new branch: git checkout \-b feature/dependency-pipeline 
 
-Add and Push the workflow file:  
-   git add .github/workflows/dependency-scan.yml  
-   git commit \-m 'Add npm \+ Snyk dependency scan workflow'  
-   git push origin feature/dependency-pipeline
+      Add and Push the workflow file:  
+      git add .github/workflows/dependency-scan.yml  
+      git commit \-m 'Add npm \+ Snyk dependency scan workflow'  
+      git push origin feature/dependency-pipeline
 
 2\. Go to GitHub and you will see a PR request. Click compare
 
