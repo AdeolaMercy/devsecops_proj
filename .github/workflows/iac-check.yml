@@ -1,0 +1,42 @@
+name: iac scan
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  iac-scan:
+    name: IaC Checkov Scan 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Checkov
+        run: |
+          pip install checkov
+
+      - name: Run Checkov Scan
+        run: |
+          mkdir -p iac-reports
+          checkov -d . -o json > iac-reports/checkov-report.json || true
+          checkov -d . -o cli > iac-reports/checkov-report.txt || true
+
+      - name: Upload Checkov Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: iac-scan-report
+          path: iac-reports/
+
+      - name: Fail workflow if vulnerabilities found
+        if: steps.checkov.outcome != 'success'
+        run: |
+          echo "IaC vulnerabilities found by Checkov. Failing the pipeline..."
+          exit 1
