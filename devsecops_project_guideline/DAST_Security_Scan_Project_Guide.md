@@ -77,6 +77,9 @@ Enable required status checks for the main branch in GitHub to prevent merging P
   • Auth & state: DAST is stateful, ensure login works and session state is handled.
   
   • False positives: DAST has false positives, implement triage and mark exceptions in an issue tracker.
+  
   • Scan frequency: Fast scans per PR, full scans nightly or on release branches.
+  
   • Permissions: Ensure that CI service account has permission to run Docker (self-hosted runners may be easier if you need --network=host).
+  
   • Resource/time: Full scans can take long, schedule them accordingly.
