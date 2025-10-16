@@ -70,9 +70,8 @@ Enable required status checks for the main branch in GitHub to prevent merging P
 
 ## **11\. Best practices & caveats**
 
-• DON’T run heavy DAST in production. Use staging or ephemeral test environments that mirror prod data (with sanitized data).
-
-• Rate-limiting / blocking: Aggressive scanning may trigger WAF or rate-limits. Use baseline scans in PRs and full scans on dedicated environments or nightly runs.
+• Don’t run heavy DAST in production. Use staging or ephemeral test environments that mirror prod data (with sanitized data).
+• Rate-limiting / blocking: Aggressive scanning may trigger WAF or rate-limits. Use baseline scans in PRs and full scans on     dedicated environments or nightly runs.
 
 • Auth & state: DAST is stateful, ensure login works and session state is handled.
 • False positives: DAST has false positives, implement triage and mark exceptions in an issue tracker.
