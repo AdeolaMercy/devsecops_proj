@@ -103,7 +103,6 @@ Example of Slack Notification:
       git push origin feature/dependency-pipeline
 
 2\. Go to GitHub and you will see a PR request. Click compare
-
 3\. Go to GitHub → Actions tab → confirm workflow run.  
 4\. Open a Pull Request → check PR comment.  
 4\. Check Slack for notifications.  
