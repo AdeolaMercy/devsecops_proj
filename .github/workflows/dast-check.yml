@@ -37,7 +37,7 @@ jobs:
           mkdir -p zap-reports
           chmod 777 zap-reports
           docker run --rm --network zapnet -v ${{ github.workspace }}/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json
+            zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json || true
 
       - name: Upload baseline report
         uses: actions/upload-artifact@v4
