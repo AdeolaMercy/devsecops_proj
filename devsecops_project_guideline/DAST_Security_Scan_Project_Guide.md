@@ -1,4 +1,4 @@
-# **OWASP Juice Shop – DAST (Dynamic Application Security Testing) Project**
+# **DAST (Dynamic Application Security Testing) Project**
 
 ## **1\. Objective**
 
@@ -67,3 +67,13 @@ Enable required status checks for the main branch in GitHub to prevent merging P
 • Prevents insecure code from deployment  
 • Improves visibility and governance  
 • Reinforces secure CI/CD practices
+
+## **11\. Best practices & caveats**
+
+• DON’T run heavy DAST in production. Use staging or ephemeral test environments that mirror prod data (with sanitized data).
+• Rate-limiting / blocking: Aggressive scanning may trigger WAF or rate-limits. Use baseline scans in PRs and full scans on dedicated environments or nightly runs.
+• Auth & state: DAST is stateful, ensure login works and session state is handled.
+• False positives: DAST has false positives, implement triage and mark exceptions in an issue tracker.
+• Scan frequency: Fast scans per PR, full scans nightly or on release branches.
+• Permissions: Ensure that CI service account has permission to run Docker (self-hosted runners may be easier if you need --network=host).
+• Resource/time: Full scans can take long, schedule them accordingly.
