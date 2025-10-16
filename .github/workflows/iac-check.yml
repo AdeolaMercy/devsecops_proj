@@ -34,3 +34,9 @@ jobs:
         with:
           name: iac-scan-report
           path: iac-reports/
+
+      - name: Fail workflow if vulnerabilities found
+        if: steps.checkov.outcome != 'success'
+        run: |
+          echo "IaC vulnerabilities found by Checkov. Failing the pipeline..."
+          exit 1
