@@ -73,7 +73,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
+    offer     = "0001-com-ubuntu-server-jammy"
     sku       = "22_04-lts"
     version   = "latest"
   }
@@ -100,5 +100,6 @@ resource "local_file" "ssh_private_keys" {
 output "vm_public_ip" {
   value = azurerm_public_ip.pip.ip_address
 }
+
 
 
