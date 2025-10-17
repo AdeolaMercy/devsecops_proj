@@ -18,3 +18,7 @@ variable "admin_ssh_key" {
   description = "SSH public key for the VM"
   type        = string
 }
+
+variable "allowed_ports" {
+  default = [22, 5000, 5932]
+}
