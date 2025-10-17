@@ -108,7 +108,7 @@ resource "azurerm_network_security_rule" "nsg_rules" {
   protocol                    = "Tcp"
   source_port_range            = "*"
   destination_port_range       = each.value
-  source_address_prefix        = var.public_ip
+  source_address_prefix        = ${var.public_ip}/32
   destination_address_prefix   = "*"
   resource_group_name          = azurerm_resource_group.rg.name
   network_security_group_name  = azurerm_network_security_group.nsg.name
@@ -118,6 +118,7 @@ resource "azurerm_network_security_rule" "nsg_rules" {
 output "vm_public_ip" {
   value = azurerm_public_ip.pip.ip_address
 }
+
 
 
 
