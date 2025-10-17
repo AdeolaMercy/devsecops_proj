@@ -22,3 +22,7 @@ jobs:
   
       - name: Terraform Destroy
         run: terraform destroy -auto-approve -var "public_ip=${{ secrets.PUBLIC_IP }}"
+
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
