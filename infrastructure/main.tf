@@ -51,6 +51,10 @@ resource "azurerm_network_interface" "nic" {
     public_ip_address_id          = azurerm_public_ip.pip.id
   }
 
+}
+
+resource "azurerm_subnet_network_security_group_association" "subnet_nsg_assoc" {
+  subnet_id                 = azurerm_subnet.subnet.id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
@@ -113,6 +117,7 @@ resource "azurerm_network_security_rule" "nsg_rules" {
 output "vm_public_ip" {
   value = azurerm_public_ip.pip.ip_address
 }
+
 
 
 
