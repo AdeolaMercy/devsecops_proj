@@ -35,7 +35,7 @@ resource "azurerm_public_ip" "pip" {
   name                = "${var.vm_name}-pip"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
 }
 
 # Network Interface
@@ -100,3 +100,4 @@ resource "local_file" "ssh_private_keys" {
 output "vm_public_ip" {
   value = azurerm_public_ip.pip.ip_address
 }
+
