@@ -63,7 +63,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   admin_ssh_key {
     username   = var.admin_username
-    public_key = tls_private_key.ssh_key.public_key_openssh
+    public_key = var.admin_ssh_key
   }
 
   os_disk {
@@ -86,20 +86,11 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-
-# ------------------------------
-# Store newly created private keys in a local file in keys directory
-# ------------------------------
-resource "local_file" "ssh_private_keys" {
-  depends_on = [azurerm_linux_virtual_machine.vm]
-  filename   = "${path.module}/${var.vm_name}_id_rsa.pem"
-  content    = tls_private_key.ssh_key.private_key_pem
-}
-
 # Output the VM public IP
 output "vm_public_ip" {
   value = azurerm_public_ip.pip.ip_address
 }
+
 
 
 
