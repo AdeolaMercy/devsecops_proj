@@ -86,10 +86,26 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
+resource "azurerm_network_security_rule" "nsg_rules" {
+  for_each                    = toset(var.allowed_ports)
+  name                        = "allow-port-${each.value}"
+  priority                    = 1000 + each.value
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range            = "*"
+  destination_port_range       = each.value
+  source_address_prefix        = var.public_ip
+  destination_address_prefix   = "*"
+  resource_group_name          = azurerm_resource_group.rg.name
+  network_security_group_name  = azurerm_network_security_group.nsg.name
+}
+
 # Output the VM public IP
 output "vm_public_ip" {
   value = azurerm_public_ip.pip.ip_address
 }
+
 
 
 
