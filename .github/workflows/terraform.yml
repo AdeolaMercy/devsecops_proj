@@ -28,15 +28,9 @@ jobs:
       - name: Terraform Init & Apply
         run: |
           terraform init
-          terraform apply -auto-approve
+          terraform apply -auto-approve -var "admin_ssh_key=${{ secrets.VM_SSH_PUBLIC_KEY }}"
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Save private key temporarily
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ steps.terraform.outputs }}" | jq -r '.values.root_module.resources[] | select(.type=="tls_private_key") | .values.private_key_pem' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
