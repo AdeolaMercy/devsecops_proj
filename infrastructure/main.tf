@@ -99,7 +99,7 @@ resource "azurerm_network_security_group" "nsg" {
 }
 
 resource "azurerm_network_security_rule" "nsg_rules" {
-  for_each                    = toset(var.allowed_ports)
+  for_each = { for port in var.allowed_ports : port => port }
   name                        = "allow-port-${each.value}"
   priority                    = 1000 + each.value
   direction                   = "Inbound"
@@ -117,6 +117,7 @@ resource "azurerm_network_security_rule" "nsg_rules" {
 output "vm_public_ip" {
   value = azurerm_public_ip.pip.ip_address
 }
+
 
 
 
