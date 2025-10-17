@@ -22,3 +22,9 @@ variable "admin_ssh_key" {
 variable "allowed_ports" {
   default = [22, 5000, 5932]
 }
+
+variable "public_ip" {
+  description = "User's public IP"
+  type        = string
+}
+
