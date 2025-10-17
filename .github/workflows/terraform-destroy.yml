@@ -5,6 +5,11 @@ on:
 jobs:
   destroy:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+       working-directory: infrastructure
+   
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
