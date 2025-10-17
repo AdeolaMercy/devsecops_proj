@@ -28,7 +28,7 @@ jobs:
       - name: Terraform Init & Apply
         run: |
           terraform init
-          terraform apply -auto-approve -lock-timeout=300s -var "admin_ssh_key=${{ secrets.VM_SSH_PUBLIC_KEY }}"
+          terraform apply -auto-approve -lock-timeout=300s -var "admin_ssh_key=${{ secrets.VM_SSH_PUBLIC_KEY }}" -var "public_ip=${{ secrets.PUBLIC_IP }}"
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
