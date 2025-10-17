@@ -50,6 +50,8 @@ resource "azurerm_network_interface" "nic" {
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.pip.id
   }
+
+  network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
 # Linux VM
@@ -86,6 +88,12 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
+resource "azurerm_network_security_group" "nsg" {
+  name                = "${var.vm_name}-nsg"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
 resource "azurerm_network_security_rule" "nsg_rules" {
   for_each                    = toset(var.allowed_ports)
   name                        = "allow-port-${each.value}"
@@ -105,6 +113,7 @@ resource "azurerm_network_security_rule" "nsg_rules" {
 output "vm_public_ip" {
   value = azurerm_public_ip.pip.ip_address
 }
+
 
 
 
