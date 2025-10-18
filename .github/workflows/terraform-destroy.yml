@@ -27,4 +27,4 @@ jobs:
         run: terraform init
   
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve -var "public_ip=${{ secrets.PUBLIC_IP }}"
+        run: terraform destroy -auto-approve -lock-timeout=300s -var "admin_ssh_key=${{ secrets.VM_SSH_PUBLIC_KEY }}" -var "public_ip=${{ secrets.PUBLIC_IP }}"
