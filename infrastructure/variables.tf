@@ -28,7 +28,3 @@ variable "public_ip" {
   type        = string
 }
 
-variable "ssh_public_key" {
-  description = "Public SSH key for GitHub Actions deploy access"
-  type        = string
-}
