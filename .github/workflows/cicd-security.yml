@@ -28,6 +28,7 @@ jobs:
           node-version: 20
       
       - name: Install dependencies
+        working-directory: juice_shop
         run: npm install
 
       - name: Run unit test
@@ -92,7 +93,7 @@ jobs:
       
       - name: Install Semgrep
         run: |
-          pip intall semgrep
+          pip install semgrep
         working-directory: juice_shop
       
       - name: Run semgrep scan
@@ -171,7 +172,7 @@ jobs:
       - name: Generate Trivy JSON report
         run: |
           trivy image --format json -o juice_shop/trivy-report.json juice-shop:latest || true
-          jq '[.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' trivy-report.json > trivy_fail.txt
+          jq '[.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' juice_shop/trivy-report.json > trivy_fail.txt
 
   DAST_Scan:
     runs-on: ubuntu-latest
