@@ -1,0 +1,256 @@
+name: security pipeline
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+    paths: 
+      - 'devsecops_proj/security_reports/*'
+      - 'devsecops_proj/devsecops_project_guideline/*'
+      - 'devsecops_proj/docs/*'
+      - 'devsecops_proj/infrastructure/*'
+
+jobs:
+  Unit Test:
+    name: Run unit test with npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run unit test
+        run: npm test
+      
+      - name: Upload Report of unit test
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+  SAST Scan Sonarqube:
+    name: Run sast scan with sonarqube and semgrep
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history required for accurate analysis
+
+      - name: Set up sonarqube
+        uses: sonarsource/sonarqube-scan-action@v2
+        with:
+          args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      
+      # Optional: Enforce quality gate (fail if scan fails)
+      #- name: SonarQube Quality Gate Check
+       # uses: sonarsource/sonarqube-quality-gate-action@v1
+        #with:
+         # host: ${{ secrets.SONAR_HOST_URL }}
+          #token: ${{ secrets.SONAR_TOKEN }}
+      
+      - name: Upload SonarQube Report
+        if: always()   # always run, even if the scan fails
+        run: |
+          mkdir -p sonar-reports
+          if [ -d ".scannerwork" ]; then
+            cp -r .scannerwork/* sonar-reports/
+            echo "📁 SonarQube metadata copied."
+          else
+            echo "⚠️ No .scannerwork directory found — scan may have failed."
+          fi
+        continue-on-error: true
+
+  SAST Scan Semgrep:
+    name: Run sast scan with semgrep
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up python - dependency needed for semgrep
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      
+      - name: Install Semgrep
+        run: |
+          pip intall semgrep
+        working-directory: juice_shop
+      
+      - name: Run semgrep scan
+        continue-on-error: true
+        run: |
+          semgrep --config=auto --exclude node_modules > semgrep-report.json || true
+          jq '[.results[] | select(.extra.severity == "ERROR" or .extra.severity == "HIGH")] | length' semgrep-report.json > semgrep_fail.txt
+        working-directory: juice_shop
+
+      - name: Run Semgrep Cloud Scan
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: semgrep ci
+
+  Dependency Scan:
+    name: Run dependency scan with snyk
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install Snyk CLI and authenticate
+      - name: Install Snyk
+        run: |
+          npm install -g snyk
+          snyk auth ${{ secrets.SNYK_TOKEN }}
+      
+      # Run Snyk test and generate report
+      - name: Run Snyk dependency scan
+        id: snyk
+        working-directory: juice_shop
+        continue-on-error: true
+        run: |
+          snyk test --json > snyk-report.json || true
+          jq '[.vulnerabilities[] | select(.severity == "high" or .severity == "critical")] | length' snyk-report.json > snyk_fail.txt
+ 
+  Secret Scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Gitleaks scan
+        id: gitleaks
+        continue-on-error: true
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          args: detect --source . --report-format json --report-path gitleaks-report.json
+
+  Container Scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --- Build the Juice Shop container ---
+      - name: Build Juice Shop Docker image
+        run: |
+          cd juice_shop
+          docker build -t juice-shop:latest .
+
+      # --- Scan the container image with Trivy ---
+      - name: Scan Juice Shop container with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'juice-shop:latest'
+          format: 'table'
+         # exit-code: '1'            # Fail build if critical/high found
+          vuln-type: 'os,library'   # Scan OS and app dependencies
+          severity: 'HIGH,CRITICAL'
+
+      # --- Optional: Upload Trivy report as an artifact ---
+      - name: Generate Trivy JSON report
+        run: |
+          trivy image --format json -o juice_shop/trivy-report.json juice-shop:latest || true
+          jq '[.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' trivy-report.json > trivy_fail.txt
+
+  DAST Scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Docker network
+        run: |
+          docker network create zapnet || true
+
+      - name: Start Juice Shop container
+        run: |
+          docker run -d --name juice --network zapnet -p 3000:3000 bkimminich/juice-shop
+          # Wait for app to be healthy (try up to 60s)
+          for i in {1..30}; do
+            if curl -sSf http://localhost:3000 | grep -q "OWASP Juice Shop"; then
+              echo "Juice Shop is up"
+              break
+            fi
+            echo "Waiting for app..."
+            sleep 2
+          done
+
+      - name: Run ZAP baseline scan (fast check)
+        run: |
+          mkdir -p zap-reports
+          chmod 777 zap-reports
+          docker run --rm --network zapnet -v ${{ github.workspace }}/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json || true
+
+      - name: Run ZAP full active scan (optional, longer)
+        run: |
+          mkdir -p zap-reports
+          chmod 777 zap-reports
+          docker run --rm --network zapnet -v ${{ github.workspace }}/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py -t http://juice:3000 -r fullscan.html -J fullscan.json || true
+          # note: allow non-zero so we can parse results and upload artifacts
+
+      - name: Enforce Security Gate
+        run: |
+          echo "🔍 Evaluating scan results..."
+          total_failures=$(cat semgrep_fail.txt trivy_fail.txt snyk_fail.txt | awk '{sum+=$1} END {print sum}')
+          echo "Total High/Critical findings: $total_failures"
+
+          if [ "$total_failures" -gt 0 ]; then
+            echo "❌ SECURITY GATE FAILED: High/Critical vulnerabilities detected in one or more scans."
+            exit 1
+          else
+            echo "✅ All scans passed security gate."
+          fi
+
+      - name: Notify Slack on Security Gate Failure
+        if: failure()   # only runs if previous steps failed
+        run: |
+          payload='{
+          "text": ":rotating_light: *Security Gate Failed!* :rotating_light:\n
+          Repository: ${{ github.repository }}\n
+          Branch: ${{ github.ref_name }}\n
+          Commit: ${{ github.sha }}\n
+          Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
+          Found High/Critical vulnerabilities during pipeline scan."
+          }'
+
+        curl -X POST -H 'Content-type: application/json' \
+          --data "$payload" ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Upload Scan Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: devsecops-scan-reports
+          path: |
+            sonar-reports/
+            juice_shop/semgrep-report.json
+            juice_shop/snyk-report.json
+            gitleaks-report.json
+            juice_shop/trivy-report.json
+            zap-reports/fullscan.json
+            zap-reports/baseline.json
+            zap-reports/fullscan.html
+            zap-reports/baseline.html
