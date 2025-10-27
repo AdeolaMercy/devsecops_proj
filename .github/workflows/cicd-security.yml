@@ -1,4 +1,4 @@
-name: security pipeline
+name: Security Pipeline
 
 on:
   push:
@@ -32,6 +32,7 @@ jobs:
         run: npm install
 
       - name: Run unit test
+        working-directory: juice_shop
         run: npm test
       
       - name: Upload Report of unit test
@@ -41,7 +42,7 @@ jobs:
           path: coverage/
 
   SAST_Scan_Sonarqube:
-    name: Run sast scan with sonarqube and semgrep
+    name: Run sast scan with sonarqube
     runs-on: ubuntu-latest
 
     steps:
@@ -132,6 +133,7 @@ jobs:
           jq '[.vulnerabilities[] | select(.severity == "high" or .severity == "critical")] | length' snyk-report.json > snyk_fail.txt
  
   Secret_Scan:
+    name: Run secrets scan
     runs-on: ubuntu-latest
 
     steps:
@@ -146,6 +148,7 @@ jobs:
           args: detect --source . --report-format json --report-path gitleaks-report.json
 
   Container_Scan:
+    name: Container scan
     runs-on: ubuntu-latest
 
     steps:
@@ -175,6 +178,7 @@ jobs:
           jq '[.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' juice_shop/trivy-report.json > trivy_fail.txt
 
   DAST_Scan:
+    name: DAST scan
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
