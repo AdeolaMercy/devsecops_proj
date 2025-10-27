@@ -237,8 +237,8 @@ jobs:
           Found High/Critical vulnerabilities during pipeline scan."
           }'
 
-        curl -X POST -H 'Content-type: application/json' \
-          --data "$payload" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Upload Scan Reports
         uses: actions/upload-artifact@v4
