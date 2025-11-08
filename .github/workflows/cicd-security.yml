@@ -175,7 +175,7 @@ jobs:
       - name: Generate Trivy JSON report
         run: |
           trivy image --format json -o juice_shop/trivy-report.json juice-shop:latest || true
-          jq '[.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' juice_shop/trivy-report.json > trivy_fail.txt
+          jq '[.Results[]? | .Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' juice_shop/trivy-report.json > trivy_fail.txt
 
   DAST_Scan:
     name: DAST scan
