@@ -260,3 +260,30 @@ jobs:
             zap-reports/baseline.json
             zap-reports/fullscan.html
             zap-reports/baseline.html
+
+      - name:  Upload All Scan Reports to DefectDojo
+        run: |
+          echo "Uploading all reports to DefectDojo..."
+          for report in juice_shop/*.json; do
+            case "$report" in
+              *semgrep*) scan_type="Semgrep Scan" ;;
+              *trivy*) scan_type="Trivy Scan" ;;
+              *zap*) scan_type="ZAP Scan" ;;
+              *) scan_type="Generic Findings Import" ;;
+            esac
+
+            echo "Uploading $report as $scan_type..."
+            curl -s -X POST "${{ secrets.DD_API_URL }}/import-scan/" \
+              -H "Authorization: Token ${{ secrets.DD_API_KEY }}" \
+              -F "scan_type=$scan_type" \
+              -F "file=@$report" \
+              -F "active=true" \
+              -F "verified=true" \
+              -F "close_old_findings=true" \
+              -F "auto_create_context=true" \
+              || echo "Warning: Failed to upload $report"
+          done
+        env:
+          DD_API_URL: ${{ secrets.DD_API_URL }}
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+         
