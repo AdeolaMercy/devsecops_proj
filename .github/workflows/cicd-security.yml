@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: reports/
+          path: coverage/
 
   SAST_Scan_Sonarqube:
     name: Run sast scan with sonarqube
@@ -100,8 +100,8 @@ jobs:
       - name: Run semgrep scan
         continue-on-error: true
         run: |
-          semgrep --config=auto --exclude node_modules > reports/semgrep-report.json || true
-          jq '[.results[] | select(.extra.severity == "ERROR" or .extra.severity == "HIGH")] | length' reports/semgrep-report.json > semgrep_fail.txt
+          semgrep --config=auto --exclude node_modules > semgrep-report.json || true
+          jq '[.results[] | select(.extra.severity == "ERROR" or .extra.severity == "HIGH")] | length' semgrep-report.json > semgrep_fail.txt
         working-directory: juice_shop
 
       - name: Run Semgrep Cloud Scan
@@ -129,8 +129,8 @@ jobs:
         working-directory: juice_shop
         continue-on-error: true
         run: |
-          snyk test --json > reports/snyk-report.json || true
-          jq '[.vulnerabilities[] | select(.severity == "high" or .severity == "critical")] | length' reports/snyk-report.json > snyk_fail.txt
+          snyk test --json > snyk-report.json || true
+          jq '[.vulnerabilities[] | select(.severity == "high" or .severity == "critical")] | length' snyk-report.json > snyk_fail.txt
  
   Secret_Scan:
     name: Run secrets scan
@@ -145,7 +145,7 @@ jobs:
         continue-on-error: true
         uses: zricethezav/gitleaks-action@v2
         with:
-          args: detect --source . --report-format json --report-path reports/gitleaks-report.json
+          args: detect --source . --report-format json --report-path gitleaks-report.json
 
   Container_Scan:
     name: Container scan
@@ -174,8 +174,8 @@ jobs:
       # --- Optional: Upload Trivy report as an artifact ---
       - name: Generate Trivy JSON report
         run: |
-          trivy image --format json -o juice_shop/reports/trivy-report.json juice-shop:latest || true
-          jq '[.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' juice_shop/reports/trivy-report.json > trivy_fail.txt
+          trivy image --format json -o juice_shop/trivy-report.json juice-shop:latest || true
+          jq '[.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' juice_shop/trivy-report.json > trivy_fail.txt
 
   DAST_Scan:
     name: DAST scan
@@ -252,10 +252,10 @@ jobs:
           name: devsecops-scan-reports
           path: |
             sonar-reports/
-            juice_shop/reports/semgrep-report.json
-            juice_shop/reports/snyk-report.json
-            reports/gitleaks-report.json
-            juice_shop/reports/trivy-report.json
+            juice_shop/semgrep-report.json
+            juice_shop/snyk-report.json
+            gitleaks-report.json
+            juice_shop/trivy-report.json
             zap-reports/fullscan.json
             zap-reports/baseline.json
             zap-reports/fullscan.html
