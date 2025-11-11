@@ -62,6 +62,8 @@ jobs:
 
       - name: Set up sonarqube
         uses: sonarsource/sonarqube-scan-action@v2
+        env:
+          SONAR_SCANNER_OPTS: "-Xmx2048m"
         with:
           args: >
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
