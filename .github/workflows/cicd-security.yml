@@ -314,10 +314,12 @@ jobs:
         with:
           name: snyk-reports
           path: reports
-      - uses: actions/download-artifact@v4
-        with:
-          name: gitleaks-reports
-          path: reports
+          
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: gitleaks-reports
+      #    path: reports
+      
       - uses: actions/download-artifact@v4
         with:
           name: trivy-reports
