@@ -84,7 +84,7 @@ jobs:
             cp -r .scannerwork/* sonar-reports/
             echo "📁 SonarQube metadata copied."
           else
-            echo "⚠️ No .scannerwork directory found — scan may have failed."
+            echo "⚠️ No .scannerwork directory found — scan may have failed.."
           fi
         continue-on-error: true
 
