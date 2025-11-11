@@ -108,8 +108,8 @@ jobs:
       - name: Run semgrep scan
         continue-on-error: true
         run: |
-          semgrep --config=auto --exclude node_modules > reports/semgrep-report.json || true
-          jq '[.results[] | select(.extra.severity == "ERROR" or .extra.severity == "HIGH")] | length' reports/semgrep-report.json > reports/semgrep_fail.txt
+          semgrep --config=auto --exclude node_modules --json > reports/semgrep-report.json || true
+          jq '[.results // [] | .[] | select(.extra.severity == "ERROR" or .extra.severity == "HIGH")] | length' reports/semgrep-report.json > reports/semgrep_fail.txt
         working-directory: juice_shop
 
       - name: Run Semgrep Cloud Scan
@@ -155,7 +155,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: detect --source . --report-format json --report-path juice_shop/reports/gitleaks-report.json
+          args: detect --source juice_shop --report-format json --report-path juice_shop/reports/gitleaks-report.json
 
   Container_Scan:
     name: Container scan
