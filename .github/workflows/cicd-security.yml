@@ -31,9 +31,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          
-      - name: Install Chrome (required for karma headless)
-        run: sudo apt-get update && sudo apt-get install -y chromium-browser
       
       - name: Install dependencies
         working-directory: juice_shop
