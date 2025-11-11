@@ -323,7 +323,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: zap-reports
-          path: zap-reports
+          path: ${{ github.workspace }}/zap-reports
 
       - name: List all reports
         run: ls -la reports
