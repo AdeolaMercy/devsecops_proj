@@ -39,9 +39,13 @@ jobs:
         working-directory: juice_shop
         run: npm install
 
+      - name: Build Juice Shop
+        working-directory: juice_shop
+        run: npm run build
+        
       - name: Run unit test
         working-directory: juice_shop
-        run: npm test
+        run: npm run test
       
       - name: Upload Report of unit test
         uses: actions/upload-artifact@v4
