@@ -52,7 +52,7 @@ jobs:
 
   SAST_Scan_Sonarqube:
     name: Run sast scan with sonarqube
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -92,7 +92,7 @@ jobs:
 
   SAST_Scan_Semgrep:
     name: Run sast scan with semgrep
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
