@@ -275,7 +275,7 @@ jobs:
       - name:  Upload All Scan Reports to DefectDojo
         run: |
           echo "Uploading all reports to DefectDojo..."
-          for report in reports/*.json; do
+          for report in juice_shop/reports/*.json; do
             case "$report" in
               *semgrep*) scan_type="Semgrep Scan" ;;
               *trivy*) scan_type="Trivy Scan" ;;
