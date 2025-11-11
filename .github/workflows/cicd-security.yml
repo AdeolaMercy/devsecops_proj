@@ -291,6 +291,7 @@ jobs:
               -H "Authorization: Token ${{ secrets.DD_API_KEY }}" \
               -F "scan_type=$scan_type" \
               -F "file=@$report" \
+              -F "engagement=${{ secrets.DD_ENGAGEMENT_ID }}" \
               -F "active=true" \
               -F "verified=true" \
               -F "close_old_findings=true" \
@@ -300,4 +301,5 @@ jobs:
         env:
           DD_API_URL: ${{ secrets.DD_API_URL }}
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_ENGAGEMENT_ID: ${{ secrets.DD_ENGAGEMENT_ID }}
          
