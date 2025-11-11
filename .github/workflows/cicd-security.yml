@@ -278,7 +278,7 @@ jobs:
             case "$report" in
               *semgrep*) scan_type="Semgrep Scan" ;;
               *trivy*) scan_type="Trivy Scan" ;;
-              *gitleaks* scan_type="Gitleaks Scan" ;;
+              *gitleaks*) scan_type="Gitleaks Scan" ;;
               *zap*) scan_type="ZAP Scan" ;;
               *) scan_type="Generic Findings Import" ;;
             esac
