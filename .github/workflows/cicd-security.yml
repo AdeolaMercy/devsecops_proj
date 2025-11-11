@@ -289,10 +289,6 @@ jobs:
           name: devsecops-scan-reports
           path: |
             sonar-reports/
-            juice_shop/reports/semgrep-report.json
-            juice_shop/reports/snyk-report.json
-            juice_shop/reports/gitleaks-report.json
-            juice_shop/reports/trivy-report.json
             zap-reports/fullscan.json
             zap-reports/baseline.json
             zap-reports/fullscan.html
@@ -327,7 +323,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: zap-reports
-          path: reports
+          path: zap-reports
 
       - name: List all reports
         run: ls -la reports
