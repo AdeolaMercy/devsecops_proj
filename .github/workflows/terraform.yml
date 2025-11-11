@@ -3,19 +3,22 @@ name: Terraform Deploy Linux VM
 on:
   push:
     branches: [ "master" ]
+    paths: 
+       - "infrastructure/**" 
   pull_request:
     branches: [ "master" ]
-  workflow_dispatch:
     paths: 
-      - 'devsecops_proj/security_reports/*'
-      - 'devsecops_proj/devsecops_project_guideline/*'
-      - 'devsecops_proj/docs/*'
-      - 'devsecops_proj/juice_shop/*'
+       - "infrastructure/**" 
+  workflow_dispatch:
+
+ 
+concurrency:
+  group: terraform-infrastructure
+  cancel-in-progress: true
   
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     
     defaults:
       run:
@@ -32,7 +35,7 @@ jobs:
 
       - name: Terraform Init & Apply
         run: |
-          terraform init
+          terraform init -reconfigure -input=false
           terraform apply -auto-approve -lock-timeout=300s -var "admin_ssh_key=${{ secrets.VM_SSH_PUBLIC_KEY }}" -var "public_ip=${{ secrets.PUBLIC_IP }}"
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
