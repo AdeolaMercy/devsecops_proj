@@ -322,7 +322,7 @@ jobs:
           path: reports
       - uses: actions/download-artifact@v4
         with:
-          name: zap-reports
+          name: devsecops-scan-reports
           path: ${{ github.workspace }}/zap-reports
 
       - name: List all reports
