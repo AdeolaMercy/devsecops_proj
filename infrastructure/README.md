@@ -1,1 +1,1 @@
-Provision a server in cloud
+Provision Azure VM server in cloud using terraform
