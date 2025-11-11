@@ -118,6 +118,12 @@ jobs:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
         run: semgrep ci
 
+      - name: Upload Semgrep artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-reports
+          path: juice_shop/reports/semgrep-report.json
+          
   Dependency_Scan:
     name: Run dependency scan with snyk
     runs-on: ubuntu-latest
@@ -140,6 +146,12 @@ jobs:
         run: |
           snyk test --json > reports/snyk-report.json || true
           jq '[.vulnerabilities // [] | .[] | select(.severity == "high" or .severity == "critical")] | length' reports/snyk-report.json > reports/snyk_fail.txt
+
+      - name: Upload Snyk artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-reports
+          path: juice_shop/reports/snyk-report.json
  
   Secret_Scan:
     name: Run secrets scan
@@ -157,6 +169,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: detect --source juice_shop --report-format json --report-path juice_shop/reports/gitleaks-report.json
+
+      - name: Upload Gitleaks artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-reports
+          path: juice_shop/reports/gitleaks-report.json
 
   Container_Scan:
     name: Container scan
@@ -187,6 +205,12 @@ jobs:
         run: |
           trivy image --format json -o juice_shop/reports/trivy-report.json juice-shop:latest || true
           jq '[.Results[]? | .Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' juice_shop/reports/trivy-report.json > juice_shop/reports/trivy_fail.txt
+
+      - name: Upload Trivy artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-reports
+          path: juice_shop/reports/trivy-report.json
 
   DAST_Scan:
     name: DAST scan
@@ -272,6 +296,38 @@ jobs:
             zap-reports/fullscan.html
             zap-reports/baseline.html
 
+  Upload_to_DefectDojo:
+    name: Upload All Scan Reports to DefectDojo
+    runs-on: ubuntu-latest
+    needs: [SAST_Scan_Semgrep, Dependency_Scan, Secret_Scan, Container_Scan, DAST_Scan]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Download all artifacts from previous jobs
+      - uses: actions/download-artifact@v4
+        with:
+          name: semgrep-reports
+          path: reports
+      - uses: actions/download-artifact@v4
+        with:
+          name: snyk-reports
+          path: reports
+      - uses: actions/download-artifact@v4
+        with:
+          name: gitleaks-reports
+          path: reports
+      - uses: actions/download-artifact@v4
+        with:
+          name: trivy-reports
+          path: reports
+      - uses: actions/download-artifact@v4
+        with:
+          name: zap-reports
+          path: reports
+
+      - name: List all reports
+        run: ls -la reports
+        
       - name:  Upload All Scan Reports to DefectDojo
         run: |
           echo "Uploading all reports to DefectDojo..."
