@@ -332,13 +332,13 @@ jobs:
         run: |
           echo "Uploading all reports to DefectDojo..."
           echo "Found reports:"
-          ls juice_shop/reports/*.json
-          for report in juice_shop/reports/*.json; do
+          ls reports/*.json
+          for report in reports/*.json; do
             case "$report" in
               *semgrep*) scan_type="Semgrep Scan" ;;
               *trivy*) scan_type="Trivy Scan" ;;
               *gitleaks*) scan_type="Gitleaks Scan" ;;
-              *zap*) scan_type="ZAP Scan" ;;
+             # *zap*) scan_type="ZAP Scan" ;;
               *) scan_type="Generic Findings Import" ;;
             esac
 
