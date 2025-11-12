@@ -163,14 +163,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz -o gitleaks.tar.gz
+          tar -xvzf gitleaks.tar.gz
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
       - name: Run Gitleaks scan
         id: gitleaks
         continue-on-error: true
-        uses: zricethezav/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: detect --source juice_shop --report-format json --report-path juice_shop/reports/gitleaks-report.json
+        run: |
+          gitleaks detect --source juice_shop --report-format json --report-path juice_shop/reports/gitleaks-report.json
+
+        
+    #  - name: Run Gitleaks scan
+     #   id: gitleaks
+      #  continue-on-error: true
+       # uses: zricethezav/gitleaks-action@v2
+        #env:
+         # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #with:
+         # args: detect --source juice_shop --report-format json --report-path juice_shop/reports/gitleaks-report.json
 
       - name: Upload Gitleaks artifact
         uses: actions/upload-artifact@v4
@@ -242,15 +256,11 @@ jobs:
 
       - name: Run ZAP baseline scan (fast check)
         run: |
-          mkdir -p juice_shop/reports
-          chmod 777 juice_shop/reports
           docker run --rm --network zapnet -v ${{ github.workspace }}/juice_shop/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json || true
 
       - name: Run ZAP full active scan (optional, longer)
         run: |
-          mkdir juice_shop/reports
-          chmod 777 juice_shop/reports
           docker run --rm --network zapnet -v ${{ github.workspace }}/juice_shop/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-full-scan.py -t http://juice:3000 -r fullscan.html -J fullscan.json || true
           # note: allow non-zero so we can parse results and upload artifacts
