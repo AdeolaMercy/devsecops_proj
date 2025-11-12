@@ -335,7 +335,7 @@ jobs:
           ls reports/*.json
           for report in reports/*.json; do
             case "$report" in
-              *semgrep*) scan_type="Semgrep Scan" ;;
+              *semgrep*) scan_type="Semgrep JSON Report" ;;
               *trivy*) scan_type="Trivy Scan" ;;
               *snyk*) scan_type="Snyk Scan" ;;
              # *zap*) scan_type="ZAP Scan" ;;
