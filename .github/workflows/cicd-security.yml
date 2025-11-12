@@ -242,16 +242,16 @@ jobs:
 
       - name: Run ZAP baseline scan (fast check)
         run: |
-          mkdir -p zap-reports
-          chmod 777 zap-reports
-          docker run --rm --network zapnet -v ${{ github.workspace }}/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+          mkdir -p juice_shop/reports
+          chmod 777 juice_shop/reports
+          docker run --rm --network zapnet -v ${{ github.workspace }}/juice_shop/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json || true
 
       - name: Run ZAP full active scan (optional, longer)
         run: |
-          mkdir -p zap-reports
-          chmod 777 zap-reports
-          docker run --rm --network zapnet -v ${{ github.workspace }}/zap-reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+          mkdir juice_shop/reports
+          chmod 777 juice_shop/reports
+          docker run --rm --network zapnet -v ${{ github.workspace }}/juice_shop/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-full-scan.py -t http://juice:3000 -r fullscan.html -J fullscan.json || true
           # note: allow non-zero so we can parse results and upload artifacts
 
@@ -289,10 +289,10 @@ jobs:
           name: devsecops-scan-reports
           path: |
             sonar-reports/
-            zap-reports/fullscan.json
-            zap-reports/baseline.json
-            zap-reports/fullscan.html
-            zap-reports/baseline.html
+            juice_shop/reports/fullscan.json
+            juice_shop/reports/baseline.json
+            juice_shop/reports/fullscan.html
+            juice_shop/reports/baseline.html
 
   Upload_to_DefectDojo:
     name: Upload All Scan Reports to DefectDojo
@@ -323,7 +323,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: devsecops-scan-reports
-          path: ${{ github.workspace }}/zap-reports
+          path: reports
 
       - name: List all reports
         run: ls -la reports
@@ -338,7 +338,7 @@ jobs:
               *semgrep*) scan_type="Semgrep JSON Report" ;;
               *trivy*) scan_type="Trivy Scan" ;;
               *snyk*) scan_type="Snyk Scan" ;;
-             # *zap*) scan_type="ZAP Scan" ;;
+              *zap*) scan_type="ZAP Scan" ;;
               *) scan_type="Generic Findings Import" ;;
             esac
 
