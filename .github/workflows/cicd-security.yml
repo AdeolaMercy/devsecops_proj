@@ -298,7 +298,7 @@ jobs:
         with:
           name: devsecops-scan-reports
           path: |
-            sonar-reports/
+            #sonar-reports/
             juice_shop/reports/fullscan.json
             juice_shop/reports/baseline.json
             juice_shop/reports/fullscan.html
@@ -348,6 +348,7 @@ jobs:
               *semgrep*) scan_type="Semgrep JSON Report" ;;
               *trivy*) scan_type="Trivy Scan" ;;
               *snyk*) scan_type="Snyk Scan" ;;
+              *gitleaks*) scan_type="Gitleaks Scan" ;;
               *zap*) scan_type="ZAP Scan" ;;
               *) scan_type="Generic Findings Import" ;;
             esac
