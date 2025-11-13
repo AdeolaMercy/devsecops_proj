@@ -298,7 +298,6 @@ jobs:
         with:
           name: devsecops-scan-reports
           path: |
-            #sonar-reports/
             juice_shop/reports/fullscan.json
             juice_shop/reports/baseline.json
             juice_shop/reports/fullscan.html
