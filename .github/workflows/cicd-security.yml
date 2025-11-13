@@ -256,6 +256,7 @@ jobs:
 
       - name: Run ZAP baseline scan (fast check)
         run: |
+          mkdir reports
           chmod 777 reports
           docker run --rm --network zapnet -v ${{ github.workspace }}/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json || true
