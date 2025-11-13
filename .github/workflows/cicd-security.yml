@@ -256,7 +256,7 @@ jobs:
 
       - name: Run ZAP baseline scan (fast check)
         run: |
-          docker run --rm --network zapnet -v ${{ github.workspace }}/juice_shop/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+          docker run --rm --network zapnet -v juice_shop/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json || true
 
       - name: Run ZAP full active scan (optional, longer)
