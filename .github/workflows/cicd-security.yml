@@ -1,0 +1,374 @@
+name: Security Pipeline
+
+on:
+  push:
+    branches: [ "master" ]
+    paths-ignore: 
+      - 'devsecops_proj/security_reports/**'
+      - 'devsecops_proj/devsecops_project_guideline/**'
+      - 'devsecops_proj/docs/**'
+      - 'devsecops_proj/infrastructure/**'
+  pull_request:
+    branches: [ "master" ]
+    paths-ignore: 
+      - 'devsecops_proj/security_reports/**'
+      - 'devsecops_proj/devsecops_project_guideline/**'
+      - 'devsecops_proj/docs/**'
+      - 'devsecops_proj/infrastructure/**'
+  workflow_dispatch:
+
+
+jobs:
+  UnitTest:
+    name: Run unit test with npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install dependencies
+        working-directory: juice_shop
+        run: npm install
+
+      - name: Build Juice Shop
+        working-directory: juice_shop
+        run: npm run build:frontend
+        
+      #- name: Run unit test
+      #  working-directory: juice_shop
+      #  run: npm test
+      
+      #- name: Upload Report of unit test
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: coverage-report
+      #    path: juice_shop/reports/
+
+  SAST_Scan_Sonarqube:
+    name: Run sast scan with sonarqube
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history required for accurate analysis
+
+      - name: Set up sonarqube
+        uses: sonarsource/sonarqube-scan-action@v2
+        env:
+          SONAR_SCANNER_OPTS: "-Xmx2048m"
+        with:
+          args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      
+      # Optional: Enforce quality gate (fail if scan fails)
+      #- name: SonarQube Quality Gate Check
+       # uses: sonarsource/sonarqube-quality-gate-action@v1
+        #with:
+         # host: ${{ secrets.SONAR_HOST_URL }}
+          #token: ${{ secrets.SONAR_TOKEN }}
+      
+      - name: Upload SonarQube Report
+        if: always()   # always run, even if the scan fails
+        run: |
+          mkdir -p sonar-reports
+          if [ -d ".scannerwork" ]; then
+            cp -r .scannerwork/* sonar-reports/
+            echo "📁 SonarQube metadata copied."
+          else
+            echo "⚠️ No .scannerwork directory found — scan may have failed.."
+          fi
+        continue-on-error: true
+
+  SAST_Scan_Semgrep:
+    name: Run sast scan with semgrep
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up python - dependency needed for semgrep
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      
+      - name: Install Semgrep
+        run: |
+          pip install semgrep
+        working-directory: juice_shop
+      
+      - name: Run semgrep scan
+        continue-on-error: true
+        run: |
+          semgrep --config=auto --exclude node_modules --json > reports/semgrep-report.json || true
+          jq '[.results // [] | .[] | select(.extra.severity == "ERROR" or .extra.severity == "HIGH")] | length' reports/semgrep-report.json > reports/semgrep_fail.txt
+        working-directory: juice_shop
+
+      - name: Run Semgrep Cloud Scan
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: semgrep ci
+
+      - name: Upload Semgrep artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-reports
+          path: juice_shop/reports/semgrep-report.json
+          
+  Dependency_Scan:
+    name: Run dependency scan with snyk
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install Snyk CLI and authenticate
+      - name: Install Snyk
+        run: |
+          npm install -g snyk
+          snyk auth ${{ secrets.SNYK_TOKEN }}
+      
+      # Run Snyk test and generate report
+      - name: Run Snyk dependency scan
+        id: snyk
+        working-directory: juice_shop
+        continue-on-error: true
+        run: |
+          snyk test --json > reports/snyk-report.json || true
+          jq '[.vulnerabilities // [] | .[] | select(.severity == "high" or .severity == "critical")] | length' reports/snyk-report.json > reports/snyk_fail.txt
+
+      - name: Upload Snyk artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-reports
+          path: juice_shop/reports/snyk-report.json
+ 
+  Secret_Scan:
+    name: Run secrets scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.29.0/gitleaks_8.29.0_linux_x64.tar.gz -o gitleaks.tar.gz
+          tar -xvzf gitleaks.tar.gz
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Run Gitleaks scan
+        id: gitleaks
+        continue-on-error: true
+        run: |
+          gitleaks detect --source juice_shop --report-format json --report-path juice_shop/reports/gitleaks-report.json
+
+        
+    #  - name: Run Gitleaks scan
+     #   id: gitleaks
+      #  continue-on-error: true
+       # uses: zricethezav/gitleaks-action@v2
+        #env:
+         # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #with:
+         # args: detect --source juice_shop --report-format json --report-path juice_shop/reports/gitleaks-report.json
+
+      - name: Upload Gitleaks artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-reports
+          path: juice_shop/reports/gitleaks-report.json
+
+  Container_Scan:
+    name: Container scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --- Build the Juice Shop container ---
+      - name: Build Juice Shop Docker image
+        run: |
+          cd juice_shop
+          docker build -t juice-shop:latest .
+
+      # --- Scan the container image with Trivy ---
+      - name: Scan Juice Shop container with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'juice-shop:latest'
+          format: 'table'
+         # exit-code: '1'            # Fail build if critical/high found
+          vuln-type: 'os,library'   # Scan OS and app dependencies
+          severity: 'HIGH,CRITICAL'
+
+      # --- Optional: Upload Trivy report as an artifact ---
+      - name: Generate Trivy JSON report
+        run: |
+          trivy image --format json -o juice_shop/reports/trivy-report.json juice-shop:latest || true
+          jq '[.Results[]? | .Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length' juice_shop/reports/trivy-report.json > juice_shop/reports/trivy_fail.txt
+
+      - name: Upload Trivy artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-reports
+          path: juice_shop/reports/trivy-report.json
+
+  DAST_Scan:
+    name: DAST scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Docker network
+        run: |
+          docker network create zapnet || true
+
+      - name: Start Juice Shop container
+        run: |
+          docker run -d --name juice --network zapnet -p 3000:3000 bkimminich/juice-shop
+          # Wait for app to be healthy (try up to 60s)
+          for i in {1..30}; do
+            if curl -sSf http://localhost:3000 | grep -q "OWASP Juice Shop"; then
+              echo "Juice Shop is up"
+              break
+            fi
+            echo "Waiting for app..."
+            sleep 2
+          done
+
+      - name: Run ZAP baseline scan (fast check)
+        run: |
+          mkdir reports
+          chmod 777 reports
+          docker run --rm --network zapnet -v ${{ github.workspace }}/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://juice:3000 -r baseline.html -J baseline.json || true
+
+      - name: Run ZAP full active scan (optional, longer)
+        run: |
+          chmod 777 reports
+          docker run --rm --network zapnet -v ${{ github.workspace }}/reports:/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py -t http://juice:3000 -r fullscan.html -J fullscan.json || true
+          # note: allow non-zero so we can parse results and upload artifacts
+
+      - name: Enforce Security Gate
+        run: |
+          echo "🔍 Evaluating scan results..."
+          total_failures=$(cat semgrep_fail.txt trivy_fail.txt snyk_fail.txt | awk '{sum+=$1} END {print sum}')
+          echo "Total High/Critical findings: $total_failures"
+
+          if [ "$total_failures" -gt 0 ]; then
+            echo "❌ SECURITY GATE FAILED: High/Critical vulnerabilities detected in one or more scans."
+            exit 1
+          else
+            echo "✅ All scans passed security gate."
+          fi
+
+      - name: Notify Slack on Security Gate Failure
+        if: failure()   # only runs if previous steps failed
+        run: |
+          payload='{
+          "text": ":rotating_light: *Security Gate Failed!* :rotating_light:\n
+          Repository: ${{ github.repository }}\n
+          Branch: ${{ github.ref_name }}\n
+          Commit: ${{ github.sha }}\n
+          Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
+          Found High/Critical vulnerabilities during pipeline scan."
+          }'
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Upload Scan Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: devsecops-scan-reports
+          path: |
+            reports/fullscan.json
+            reports/baseline.json
+            reports/fullscan.html
+            reports/baseline.html
+
+  Upload_to_DefectDojo:
+    name: Upload All Scan Reports to DefectDojo
+    runs-on: ubuntu-latest
+    needs: [SAST_Scan_Semgrep, Dependency_Scan, Secret_Scan, Container_Scan, DAST_Scan]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Download all artifacts from previous jobs
+      - uses: actions/download-artifact@v4
+        with:
+          name: semgrep-reports
+          path: reports
+      - uses: actions/download-artifact@v4
+        with:
+          name: snyk-reports
+          path: reports
+          
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: gitleaks-reports
+      #    path: reports
+      
+      - uses: actions/download-artifact@v4
+        with:
+          name: trivy-reports
+          path: reports
+      - uses: actions/download-artifact@v4
+        with:
+          name: devsecops-scan-reports
+          path: reports
+
+      - name: List all reports
+        run: ls -la reports
+        
+      - name:  Upload All Scan Reports to DefectDojo
+        run: |
+          echo "Uploading all reports to DefectDojo..."
+          echo "Found reports:"
+          ls reports/*.json
+          for report in reports/*.json; do
+            case "$report" in
+              *semgrep*) scan_type="Semgrep JSON Report" ;;
+              *trivy*) scan_type="Trivy Scan" ;;
+              *snyk*) scan_type="Snyk Scan" ;;
+              *gitleaks*) scan_type="Gitleaks Scan" ;;
+              *zap*) scan_type="ZAP Scan" ;;
+              *) scan_type="Generic Findings Import" ;;
+            esac
+
+            echo "Uploading $report as $scan_type..."
+            curl -s -X POST "${{ secrets.DD_API_URL }}/import-scan/" \
+              -H "Authorization: Token ${{ secrets.DD_API_KEY }}" \
+              -F "scan_type=$scan_type" \
+              -F "file=@$report" \
+              -F "engagement=${{ secrets.DD_ENGAGEMENT_ID }}" \
+              -F "active=true" \
+              -F "verified=true" \
+              -F "close_old_findings=true" \
+              -F "auto_create_context=true" \
+              || echo "Warning: Failed to upload $report"
+          done
+        env:
+          DD_API_URL: ${{ secrets.DD_API_URL }}
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_ENGAGEMENT_ID: ${{ secrets.DD_ENGAGEMENT_ID }}
+         

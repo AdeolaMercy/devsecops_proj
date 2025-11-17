@@ -3,14 +3,22 @@ name: Terraform Deploy Linux VM
 on:
   push:
     branches: [ "master" ]
+    paths: 
+       - "infrastructure/**"      # Only run if files in the infrastructure folder change
   pull_request:
     branches: [ "master" ]
+    paths: 
+       - "infrastructure/**" 
   workflow_dispatch:
+
+ 
+concurrency:
+  group: terraform-infrastructure
+  cancel-in-progress: true
   
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     
     defaults:
       run:
@@ -27,7 +35,7 @@ jobs:
 
       - name: Terraform Init & Apply
         run: |
-          terraform init
+          terraform init -reconfigure -input=false
           terraform apply -auto-approve -lock-timeout=300s -var "admin_ssh_key=${{ secrets.VM_SSH_PUBLIC_KEY }}" -var "public_ip=${{ secrets.PUBLIC_IP }}"
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
