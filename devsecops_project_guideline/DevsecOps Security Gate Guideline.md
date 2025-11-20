@@ -1,16 +1,16 @@
-# DevsecOps Security Gate Guideline on GitHub
+# DevsecOps Security Gate Guideline using GitHub Actions
 
  **Step-by-step guide to enable required status checks**
 
 -  Go to repository settings  
 - Open your GitHub repository.  
-- **Click on Settings → Branches** (in the left sidebar).  
+- **Click on Settings > Branches** (in the left sidebar).  
   * Add a branch protection rule  
   * Under Branch protection rules, click Add rule.  
   * In Branch name pattern, type:  
   * main  
 - **Enable required status checks** 
-  * Check ✅ Require status checks to pass before merging.  
+  * Check Require status checks to pass before merging.  
   * A list of workflows/jobs appears which should correspond to your GitHub Actions runs.  
   * Select the specific job(s) you want to enforce, e.g. dependency-scan, semgrep-scan  
   * (If you’re unsure, you can first run your workflow once which will appear in the list.)  
